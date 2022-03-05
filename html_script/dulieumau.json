@@ -1,0 +1,115 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          105.772175,
+          10.030212
+        ]
+      },
+      "properties": {
+        "name": "Cổng A khu 2 ĐHCT","show_on_map": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          105.773492,
+          10.031844
+        ]
+      },
+      "properties": {
+        "name": "Sở GDĐT Cần Thơ","show_on_map": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            105.771002,
+            10.031173
+          ],
+          [
+            105.772172,
+            10.030222
+          ]
+        ]
+      },
+      "properties": {
+        "name": "Đường cổng A","show_on_map": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            105.767838,
+            10.02859
+          ],
+          [
+            105.769329,
+            10.029097
+          ]
+        ]
+      },
+      "properties": {
+        "name": "Đường mới","show_on_map": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          105.766915,
+          10.029784
+        ]
+      },
+      "properties": {
+        "name": "Điểm mới","show_on_map": true
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              105.76913,
+              10.031537
+            ],
+            [
+              105.768696,
+              10.030972
+            ],
+            [
+              105.76905,
+              10.030644
+            ],
+            [
+              105.769538,
+              10.031204
+            ],
+            [
+              105.76913,
+              10.031537
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "name": "Khoa CNTT - TT","show_on_map": true
+      }
+    }
+  ]
+}
