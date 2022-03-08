@@ -5,10 +5,12 @@ import { View ,Text, SafeAreaView, StyleSheet, Button, ScrollView } from "react-
 import { WebView } from "react-native-webview";
 import html_script from "../html_script/html_script_mapscreen";
 import dlm from "../html_script/dulieumau.json";
+import axios from "axios";
 
 const MapScreen =({navigation})=> {
   const [msg, setMsg] = useState('');
   const [location, setLocation] = useState();
+  const [dbGeoJSON, setDBGeoJSON] = useState();
   const Map_Ref = useRef();
 
   useEffect(()=>{
@@ -25,12 +27,15 @@ const MapScreen =({navigation})=> {
       let getloca = await Location.getCurrentPositionAsync({});
       setMsg(`[${getloca.coords.latitude}, ${getloca.coords.longitude}]`);
       setLocation(getloca);
-      getLocation(getloca);
-      getGEOJSON();
+      
+      // _showGEOJSONFILE();
+      _getLocationGPS(getloca);    
     })();
-  },[])
-  
-  const getLocation=(location)=>{
+    _getDBGeoJSON();
+    
+  },[])  
+
+  const _getLocationGPS=(location)=>{
     if (!location) {
       console.log("Your browser dont support geolocation feature!");
     } else {
@@ -54,9 +59,43 @@ const MapScreen =({navigation})=> {
       `);
     }
   }
-  const getGEOJSON=()=>{
+  const _showGEOJSONFILE=()=>{
     Map_Ref.current.injectJavaScript(`
     var geo =${JSON.stringify(dlm)};
+    L.geoJSON(geo,{
+      onEachFeature:onEachFeature,
+      style: function (feature) {	 //qui định style cho các đối tượng
+        switch (feature.geometry.type) {
+          // case 'Point': return pointStyle;
+          case 'LineString':   return lineStyle;
+          case 'Polygon':   return polygonStyle;
+        }
+      }
+  }).addTo(mymap);
+      `);
+  };
+
+  const config = {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Accept': 'application/json'},
+  };
+
+  function _getDBGeoJSON(){
+    axios
+    .get("/realestate",config)
+    .then((res)=>{
+      setDBGeoJSON(res.data);
+      _showDBGeoJSON();
+    })
+    .catch((err)=>{
+      console.log( err);
+    });
+  }
+
+  function _showDBGeoJSON(){
+    Map_Ref.current.injectJavaScript(`
+    var geo =${JSON.stringify(dbGeoJSON)};
     L.geoJSON(geo,{
       	onEachFeature:onEachFeature,
       	style: function (feature) {	 //qui định style cho các đối tượng
@@ -68,14 +107,10 @@ const MapScreen =({navigation})=> {
       	},
       	pointToLayer: function (feature, latlng) {
       		return L.circleMarker(latlng, geojsonMarkerOptions);
-      	},
-      	filter: function(feature, layer) {
-      		return feature.properties.show_on_map;
       	}
-      	}).addTo(mymap);
+    }).addTo(mymap);
       `);
-  };
-  
+  }
     return (
       <>
         <View style={styles.Text}>
@@ -94,7 +129,7 @@ const MapScreen =({navigation})=> {
     );
   }
 
-  export default MapScreen;
+export default MapScreen;
 const styles = StyleSheet.create({
   Container: {
     flex: 1,

@@ -34,7 +34,6 @@ const html_script = `
 		id: 'mapbox/streets-v11'
 	})
 	osm.addTo(mymap);
-
 	var geojsonMarkerOptions = {
 		radius: 8,
 		fillColor: "#ff7800",
@@ -62,122 +61,9 @@ const html_script = `
 	
 		
 	//Định các style cho point, line và polygon
-	var lineStyle={color: "blue", weight: 2};
+	var lineStyle={color: "blue", weight: 5};
 	var polygonStyle={color: "pink", fillColor: "black", weight: 4};
-
-	//Add GeoJSON lên bản đồ
-	var Geo={
-		"type": "FeatureCollection",
-		"features": [
-			{
-				"type": "Feature",
-				"geometry": {
-				  "type": "Point",
-				  "coordinates": [
-					105.773492,
-					10.031844
-				  ]
-				},
-				"properties": {
-				  "name": "Sở GDĐT Cần Thơ","show_on_map": true
-				}
-			  },
-			  {
-				"type": "Feature",
-				"geometry": {
-				  "type": "LineString",
-				  "coordinates": [
-					[
-					  105.767838,
-					  10.02859
-					],
-					[
-					  105.769329,
-					  10.029097
-					]
-				  ]
-				},
-				"properties": {
-				  "name": "Đường mới","show_on_map": true
-				}
-			  },
-			  {
-				"type": "Feature",
-				"geometry": {
-				  "type": "Polygon",
-				  "coordinates": [
-					[
-					  [
-						105.76913,
-						10.031537
-					  ],
-					  [
-						105.768696,
-						10.030972
-					  ],
-					  [
-						105.76905,
-						10.030644
-					  ],
-					  [
-						105.769538,
-						10.031204
-					  ],
-					  [
-						105.76913,
-						10.031537
-					  ]
-					]
-				  ]
-				},
-				"properties": {
-				  "name": "Khoa CNTT - TT","show_on_map": true
-				}
-			  }
-		  ]
-		}
-		
-		// L.geoJSON(Geo,{
-		// 	onEachFeature:onEachFeature,
-		// 	style: function (feature) {	 //qui định style cho các đối tượng
-		// 		switch (feature.geometry.type) {
-		// 			// case 'Point': return pointStyle;
-		// 			case 'LineString':   return lineStyle;
-		// 			case 'Polygon':   return polygonStyle;
-		// 		}
-		// 	},
-		// 	pointToLayer: function (feature, latlng) {
-		// 		return L.circleMarker(latlng, geojsonMarkerOptions);
-		// 	},
-		// 	filter: function(feature, layer) {
-		// 		return feature.properties.show_on_map;
-		// 	}
-		// 	}).addTo(mymap);
 			
-		// //Hiển thị tất cả đối tượng lên bản đồ
-	// var urlGeoJSON = "https://raw.githubusercontent.com/trinhtthao203/nodejs_blog/main/dulieumau.geojson";
-	// $.getJSON(urlGeoJSON , function(data) {
-	// 	L.geoJSON(data, {
-	// 		style: function (feature) {	 //qui định style cho các đối tượng
-	// 			switch (feature.geometry.type) {
-	// 				case 'LineString':   return lineStyle;
-	// 				case 'Polygon':   return polygonStyle;
-	// 			}
-	// 		},
-	// 		//Có thể chủ động icon cho point
-	// 		//pointToLayer: function (feature, latlng){
-	// 		//						return L.marker(latlng, {icon:pointStyle});			
-	// 		//},
-	// 		//icon mặc định trong css/images
-	// 		onEachFeature: function(feature, layer) {	//Mỗi đối tượng thêm popup vào
-	// 			if (feature.properties && feature.properties.name) {	//Có properties và có name
-	// 				layer.bindPopup("<i>" + feature.properties.name + "</i>");
-	// 			}
-	// 		}
-	// 	}).addTo(mymap);
-	// });
-			
-
 
 </script>
 </body>

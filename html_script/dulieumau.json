@@ -11,7 +11,7 @@
         ]
       },
       "properties": {
-        "name": "Cổng A khu 2 ĐHCT","show_on_map": true
+        "name": "Cổng A khu 2 ĐHCT"
       }
     },
     {
@@ -24,7 +24,7 @@
         ]
       },
       "properties": {
-        "name": "Sở GDĐT Cần Thơ","show_on_map": true
+        "name": "Sở GDĐT Cần Thơ"
       }
     },
     {
@@ -43,7 +43,7 @@
         ]
       },
       "properties": {
-        "name": "Đường cổng A","show_on_map": true
+        "name": "Đường cổng A"
       }
     },
     {
@@ -62,7 +62,7 @@
         ]
       },
       "properties": {
-        "name": "Đường mới","show_on_map": true
+        "name": "Đường mới"
       }
     },
     {
@@ -75,7 +75,7 @@
         ]
       },
       "properties": {
-        "name": "Điểm mới","show_on_map": true
+        "name": "Điểm mới"
       }
     },
     {
@@ -108,7 +108,7 @@
         ]
       },
       "properties": {
-        "name": "Khoa CNTT - TT","show_on_map": true
+        "name": "Khoa CNTT - TT"
       }
     }
   ]
