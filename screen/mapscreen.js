@@ -5,14 +5,14 @@ import { View ,Text, SafeAreaView, StyleSheet, Button, ScrollView } from "react-
 import { WebView } from "react-native-webview";
 import html_script from "../html_script/html_script_mapscreen";
 import dlm from "../html_script/dulieumau.json";
-import axios from "axios";
 
-const MapScreen =({navigation})=> {
+const MapScreen =({route,navigation})=> {
   const [msg, setMsg] = useState('');
   const [location, setLocation] = useState();
-  const [dbGeoJSON, setDBGeoJSON] = useState();
   const Map_Ref = useRef();
-
+  const {db} = route.params;
+  
+  // const db = props;
   useEffect(()=>{
     (async () => {
       if (Platform.OS === "android" && !Constants.isDevice) {
@@ -27,12 +27,10 @@ const MapScreen =({navigation})=> {
       let getloca = await Location.getCurrentPositionAsync({});
       setMsg(`[${getloca.coords.latitude}, ${getloca.coords.longitude}]`);
       setLocation(getloca);
-      
+      _getLocationGPS(getloca);   
       // _showGEOJSONFILE();
-      _getLocationGPS(getloca);    
-    })();
-    _getDBGeoJSON();
-    
+      _showDBGeoJSON();    
+    })();   
   },[])  
 
   const _getLocationGPS=(location)=>{
@@ -81,22 +79,13 @@ const MapScreen =({navigation})=> {
       'Accept': 'application/json'},
   };
 
-  function _getDBGeoJSON(){
-    axios
-    .get("/realestate",config)
-    .then((res)=>{
-      setDBGeoJSON(res.data);
-      _showDBGeoJSON();
-    })
-    .catch((err)=>{
-      console.log( err);
-    });
-  }
-
   function _showDBGeoJSON(){
     Map_Ref.current.injectJavaScript(`
-    var geo =${JSON.stringify(dbGeoJSON)};
-    L.geoJSON(geo,{
+    var geo2=${JSON.stringify(db)};
+    if (geo2Layer) {
+      mymap.removeLayer(geo2Layer);
+    }else{
+       var geo2Layer = L.geoJSON(geo2,{
       	onEachFeature:onEachFeature,
       	style: function (feature) {	 //qui định style cho các đối tượng
       		switch (feature.geometry.type) {
@@ -108,7 +97,10 @@ const MapScreen =({navigation})=> {
       	pointToLayer: function (feature, latlng) {
       		return L.circleMarker(latlng, geojsonMarkerOptions);
       	}
-    }).addTo(mymap);
+    })
+    geo2Layer.addTo(mymap);
+    }
+   
       `);
   }
     return (
