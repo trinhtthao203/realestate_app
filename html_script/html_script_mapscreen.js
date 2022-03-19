@@ -1,4 +1,4 @@
-const html_script = `
+const html_script_mapscreen = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -58,7 +58,6 @@ const html_script = `
 			.openOn(mymap);
 	}
 	mymap.on('click', onMapClick);
-	
 		
 	//Định các style cho point, line và polygon
 	var lineStyle={color: "blue", weight: 5};
@@ -70,4 +69,4 @@ const html_script = `
 </html>
 `;
 
-export default html_script;
+export default html_script_mapscreen;
