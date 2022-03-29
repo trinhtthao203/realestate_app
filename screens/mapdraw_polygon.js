@@ -8,7 +8,6 @@ import {
   ScrollView,
 } from "react-native";
 import { WebView } from "react-native-webview";
-import html_script_mapdraw_point from "../html_script/html_script_mapdraw_point";
 import { _showDBGeoJSON } from "../Utils/Common";
 import {
   Button,
@@ -18,6 +17,7 @@ import {
   NativeBaseProvider,
 } from "native-base";
 import axios from "axios";
+import html_script_mapdraw_polygon from "../html_script/html_script_mapdraw_polygon";
 
 const MapDrawPoint = ({ route, navigation }) => {
   const [objectDraw, setObjectDraw] = useState("");
@@ -33,7 +33,7 @@ const MapDrawPoint = ({ route, navigation }) => {
   const _submitObject = () => {
     return Alert.alert(
       "Are your sure?",
-      "Are you sure you want to save POINT in map?",
+      "Are you sure you want to save POLYGON in map?",
       [
         // The "Yes" button
         {
@@ -46,7 +46,7 @@ const MapDrawPoint = ({ route, navigation }) => {
               db: db,
             });
             axios
-              .post("/realestate/draw-point", {
+              .post("/realestate/draw", {
                 name: name,
                 objectDraw: objectDraw,
               })
@@ -94,11 +94,11 @@ const MapDrawPoint = ({ route, navigation }) => {
       </Button>
     );
   } else {
-    latlng = <Text>Bạn chưa chọn điểm</Text>;
+    latlng = <Text>Bạn chưa chọn vùng</Text>;
     btnSave = (
       <Button
         onPress={() => {
-          alert("Vui lòng chọn địa điểm");
+          alert("Vui lòng chọn vùng");
         }}
       >
         Save
@@ -112,7 +112,7 @@ const MapDrawPoint = ({ route, navigation }) => {
         <NativeBaseProvider>
           <WebView
             ref={Map_Ref}
-            source={{ html: html_script_mapdraw_point }}
+            source={{ html: html_script_mapdraw_polygon }}
             style={styles.Webview}
             onMessage={onMessage}
           />
@@ -120,7 +120,7 @@ const MapDrawPoint = ({ route, navigation }) => {
           <Modal isOpen={showModal} onClose={() => setShowModal(false)}>
             <Modal.Content maxWidth="400px">
               <Modal.CloseButton />
-              <Modal.Header>Save Point to Data</Modal.Header>
+              <Modal.Header>Save POLYGON to Data</Modal.Header>
               <Modal.Body>
                 <FormControl>
                   <FormControl.Label>Name</FormControl.Label>

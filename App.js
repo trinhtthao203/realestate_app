@@ -1,17 +1,22 @@
-import React, { useEffect, useState, useRef } from "react";
+import "react-native-gesture-handler";
+import * as React from "react";
 import { NavigationContainer } from "@react-navigation/native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import MapScreen from "./screen/mapscreen";
-import MapDrawPoint from "./screen/mapdraw_point";
-import HomeScreen from "./screen/homescreen";
+import MapScreen from "./screens/mapscreen";
+import MapDrawPoint from "./screens/mapdraw_point";
+import HomeScreen from "./screens/homescreen";
 import axios from "axios";
-import MapDrawLine from "./screen/mapdraw_linestring";
-import MapDrawPolygon from "./screen/mapdraw_polygon";
+import MapDrawLine from "./screens/mapdraw_linestring";
+import MapDrawPolygon from "./screens/mapdraw_polygon";
+
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+// import { createDrawerNavigator } from "@react-navigation/drawer";
+// const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
+
 //TTHL
-// axios.defaults.baseURL = 'http://10.10.33.225:4000'
+axios.defaults.baseURL = "http://10.10.33.14:4000";
 //KTX
-axios.defaults.baseURL = "http://10.1.14.254:4000";
+// axios.defaults.baseURL = "http://10.1.14.254:4000";
 
 const App = () => {
   return (

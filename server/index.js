@@ -42,7 +42,7 @@ app.get("/realestate", (req, res) => {
   }
 });
 
-app.post("/realestate/draw-point", (req, res) => {
+app.post("/realestate/draw", (req, res) => {
   try {
     const { name, objectDraw } = req.body;
     if (!name || !objectDraw) {
@@ -68,4 +68,24 @@ app.post("/realestate/draw-point", (req, res) => {
   } catch (error) {
     console.log(error);
   }
+});
+
+app.delete("/realestate/delete", (req, res) => {
+  const { id } = req.body;
+  id.forEach((element) => {
+    console.log(element);
+    if (!element) {
+      console.log("Thieu element");
+      return;
+    }
+    const data = [element];
+    const query = "DELETE FROM realestate WHERE id=$1;";
+    pool.query(query, data, (err, response) => {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log("delete success");
+      }
+    });
+  });
 });

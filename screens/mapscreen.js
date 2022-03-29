@@ -1,27 +1,38 @@
 import React, { useEffect, useState, useRef } from "react";
 import Constants from "expo-constants";
 import * as Location from "expo-location";
-import { View, Text, SafeAreaView, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  SafeAreaView,
+  StyleSheet,
+  TouchableOpacity,
+} from "react-native";
 import { WebView } from "react-native-webview";
 import html_script from "../html_script/html_script_mapscreen";
 import dlm from "../html_script/dulieumau.json";
+import axios from "axios";
 import {
   Spinner,
   HStack,
   Heading,
   Center,
   NativeBaseProvider,
-  Button,
+  Menu,
+  HamburgerIcon,
+  Box,
+  Pressable,
   VStack,
-  Flex,
+  Button,
 } from "native-base";
-import { _showDBGeoJSON, _showLocationGPS } from "../Utils/Common";
+import { _showDBGeoJSON, _showLocationGPS, _refreshMap } from "../Utils/Common";
 
 const MapScreen = ({ route, navigation }) => {
   const [msg, setMsg] = useState("");
   const Map_Ref = useRef();
   const { db } = route.params;
   const { isLoading } = route.params;
+  const [delItems, setDelItems] = useState();
 
   useEffect(() => {
     (async () => {
@@ -39,10 +50,66 @@ const MapScreen = ({ route, navigation }) => {
       let getloca = await Location.getCurrentPositionAsync({});
       setMsg(`[${getloca.coords.latitude}, ${getloca.coords.longitude}]`);
       _showLocationGPS(getloca, Map_Ref);
-      _showDBGeoJSON(db, Map_Ref);
+      // _showDBGeoJSON(db, Map_Ref);
+      // _updateMapScreen(Map_Ref);
       // _showGEOJSONFILE(dlm);
+
+      //Thêm vào nút refresh
+      // _refreshMap(Map_Ref);
     })();
   }, []);
+
+  const [responseData, setResponseData] = useState();
+
+  const fetchData = async () => {
+    try {
+      const result = await axios({
+        method: "GET",
+        url: "/realestate",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          Accept: "application/json",
+        },
+        params: {
+          search: "parameter",
+        },
+      });
+      setResponseData(result.data);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  //nhận data từ WebView
+  function onMessage(payload) {
+    let dataPayload;
+    try {
+      dataPayload = JSON.parse(payload.nativeEvent.data);
+    } catch (e) {
+      console.log(e);
+    }
+
+    if (Number.isInteger(Number.parseInt(dataPayload[0]))) {
+      _delItems(dataPayload);
+      _showDBGeoJSON(responseData, Map_Ref);
+    } else {
+      console.log(dataPayload);
+    }
+  }
+
+  function _delItems(id) {
+    try {
+      axios
+        .delete("/realestate/delete", { data: { id: id } })
+        .then((response) => console.log(response.data))
+        .catch((error) => {
+          console.error("There was an error! ", error);
+        });
+    } catch (err) {
+      console.log(err);
+    }
+    fetchData();
+  }
 
   let mapscreen;
   if (isLoading) {
@@ -62,15 +129,16 @@ const MapScreen = ({ route, navigation }) => {
     mapscreen = (
       <>
         <NativeBaseProvider>
-          <View style={styles.Text}>
-            <Text>Bạn đang ở tọa độ: {msg}</Text>
-          </View>
           <SafeAreaView style={styles.Container}>
             <WebView
               ref={Map_Ref}
               source={{ html: html_script }}
               style={styles.Webview}
+              onMessage={onMessage}
             />
+            <View style={styles.Text}>
+              <Text>Bạn đang ở tọa độ: {msg}</Text>
+            </View>
             <VStack space="2.5" mt="1.5" px="8">
               <HStack space={3} justifyContent="center">
                 <Button
@@ -147,6 +215,6 @@ const styles = StyleSheet.create({
   Text: {
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 30,
+    marginTop: 5,
   },
 });
