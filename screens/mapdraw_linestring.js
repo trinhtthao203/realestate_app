@@ -1,14 +1,12 @@
 import React, { useEffect, useState, useRef } from "react";
 import {
   Alert,
-  TextInput,
   Text,
   SafeAreaView,
   StyleSheet,
   ScrollView,
 } from "react-native";
 import { WebView } from "react-native-webview";
-import { _showDBGeoJSON } from "../Utils/Common";
 import {
   Button,
   Modal,
@@ -17,17 +15,17 @@ import {
   NativeBaseProvider,
 } from "native-base";
 import axios from "axios";
-import html_script_mapdraw_linestring from "../html_script/html_script_mapdraw_linestring";
+import html_script_mapdraw from "../html_script/html_script_mapdraw";
+import { _setToolLineString } from "../Utils/Common";
 
 const MapDrawLine = ({ route, navigation }) => {
   const [objectDraw, setObjectDraw] = useState("");
   const [name, setName] = React.useState("");
   const [showModal, setShowModal] = useState(false);
   const Map_Ref = useRef();
-  const { db } = route.params;
 
   useEffect(() => {
-    _showDBGeoJSON(db, Map_Ref);
+    _setToolLineString(Map_Ref);
   }, []);
 
   const _submitObject = () => {
@@ -42,9 +40,7 @@ const MapDrawLine = ({ route, navigation }) => {
             Map_Ref.current.injectJavaScript(`           
             drawnItems.clearLayers();
             `);
-            navigation.navigate("MapScreen", {
-              db: db,
-            });
+            navigation.navigate("MapScreen");
             axios
               .post("/realestate/draw", {
                 name: name,
@@ -54,6 +50,7 @@ const MapDrawLine = ({ route, navigation }) => {
               .catch((error) => {
                 console.error("There was an error!", error);
               });
+            setName("");
           },
         },
         {
@@ -112,7 +109,7 @@ const MapDrawLine = ({ route, navigation }) => {
         <NativeBaseProvider>
           <WebView
             ref={Map_Ref}
-            source={{ html: html_script_mapdraw_linestring }}
+            source={{ html: html_script_mapdraw }}
             style={styles.Webview}
             onMessage={onMessage}
           />

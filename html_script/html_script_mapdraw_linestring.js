@@ -69,6 +69,7 @@ const html_script_mapdraw_linestring = `
 		}
 	};
     var drawControl = new L.Control.Draw(options).addTo(mymap);
+	
 	var k=1;
 	//Khi vẽ thì thêm vào lớp drawnItems
 	function showText(e) {	

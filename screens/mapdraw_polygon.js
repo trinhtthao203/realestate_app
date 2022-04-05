@@ -8,7 +8,7 @@ import {
   ScrollView,
 } from "react-native";
 import { WebView } from "react-native-webview";
-import { _showDBGeoJSON } from "../Utils/Common";
+import { _setToolPolygon } from "../Utils/Common";
 import {
   Button,
   Modal,
@@ -17,17 +17,16 @@ import {
   NativeBaseProvider,
 } from "native-base";
 import axios from "axios";
-import html_script_mapdraw_polygon from "../html_script/html_script_mapdraw_polygon";
+import html_script_mapdraw from "../html_script/html_script_mapdraw_polygon";
 
 const MapDrawPoint = ({ route, navigation }) => {
   const [objectDraw, setObjectDraw] = useState("");
   const [name, setName] = React.useState("");
   const [showModal, setShowModal] = useState(false);
   const Map_Ref = useRef();
-  const { db } = route.params;
 
   useEffect(() => {
-    _showDBGeoJSON(db, Map_Ref);
+    _setToolPolygon(Map_Ref);
   }, []);
 
   const _submitObject = () => {
@@ -42,9 +41,7 @@ const MapDrawPoint = ({ route, navigation }) => {
             Map_Ref.current.injectJavaScript(`           
             drawnItems.clearLayers();
             `);
-            navigation.navigate("MapScreen", {
-              db: db,
-            });
+            navigation.navigate("MapScreen");
             axios
               .post("/realestate/draw", {
                 name: name,
@@ -54,6 +51,7 @@ const MapDrawPoint = ({ route, navigation }) => {
               .catch((error) => {
                 console.error("There was an error!", error);
               });
+            setName("");
           },
         },
         {
@@ -112,7 +110,7 @@ const MapDrawPoint = ({ route, navigation }) => {
         <NativeBaseProvider>
           <WebView
             ref={Map_Ref}
-            source={{ html: html_script_mapdraw_polygon }}
+            source={{ html: html_script_mapdraw }}
             style={styles.Webview}
             onMessage={onMessage}
           />

@@ -47,87 +47,64 @@ const html_script_mapscreen = `
 		fillOpacity: 0.8
 	};
 
+	function handleUpdateName(id){
+		window.ReactNativeWebView.postMessage(id);
+	}
+
 	function onEachFeature(feature, layer) {
 		// does this feature have a property named popupContent?
 		if (feature.properties && feature.properties.name ) {
-			layer.bindPopup(feature.properties.name);
-
+			layer.bindPopup('<h3>'+feature.properties.name+'</h3>'+
+				'<button type="button" class="btn btn-primary sidebar-open-button" onclick="handleUpdateName('+feature.properties.id+')">Sửa tên</button>'
+				);
 		}
 	}
 
-	var popup = L.popup();
-	function onMapClick(e) {
-		popup
-			.setLatLng(e.latlng)
-			.setContent("You clicked the map at " + e.latlng.toString())
-			.openOn(mymap);
-	}
-	mymap.on('click', onMapClick);
-		
 	//Định các style cho point, line và polygon
 	var lineStyle={color: "blue", weight: 5};
 	var polygonStyle={color: "pink", fillColor: "black", weight: 4};
-	
-	var url='http://10.10.35.6:4000'
 
-	const fetchDEL = async(id)=>{
-		const response = await fetch(url+'/realestate/delete',{
-				method:'DELETE',
-				headers: {
-				  'Content-Type':'application/json',
-				  "Access-Control-Allow-Origin": "*",
-				},
-				body: JSON.stringify(id)
-			}).catch(error=>{alert(error)});
-
-		const data = await response.json();
-		console.log(data);
-	}
 	var listID=[];
-	function handleDEL(id,layer) {
-		var result = confirm("Chắc chắn xóa ?"+ id);
+	//Xử lí khi xóa
+	function handleDEL(id,name, layer) {
+		var result = confirm("Chắc chắn xóa ? "+ name);
 		if(result){
 			listID.push(id);
-			// fetchDEL(id);
 		}else{
 			layer.addTo(drawnItems);
 			alert('Hủy xóa !');
 		}
 	}
 	
-	
-	function editText(e) {
-		alert('edit');
-		let layers = e.layers;
-		layers.eachLayer(function(layer) {
-			layer.addTo(drawnItems);			
-		});
-		sendDataToReactNativeApp(db);
-	}
-
-	//Khi xóa thì bớt vào lớp drawnItems
-	mymap.on('draw:edited', editText);
-
 	function delText(e) {
 		var layers = e.layers;		
 		layers.eachLayer(function (layer) {
 			drawnItems.removeLayer(layer);
 			var collection = layer.toGeoJSON();
 			var id = JSON.stringify(collection.properties.id, null, 2);
-			handleDEL(id,layer);
+			var name = JSON.stringify(collection.properties.name, null, 2);
+			handleDEL(id,name,layer);
 		});
 		var idJSON = JSON.stringify(listID, null, 2);
-		alert(idJSON);
 		window.ReactNativeWebView.postMessage(idJSON);
 	}
-	//Khi xóa thì bớt lớp drawnItems
-	mymap.on('draw:deleted', delText);
 
-	const sendDataToReactNativeApp = async () => {
-		var collection = drawnItems.toGeoJSON();
-		var geojson1 = JSON.stringify(collection, null, 2);	
-		window.ReactNativeWebView.postMessage(geojson1);
-	};
+	//Khi xóa thì bớt ở lớp drawnItems
+	mymap.on('draw:deleted', delText);
+	
+	//Khi EDIT
+	//Layer chứa các items edit
+	var editItems = L.featureGroup().addTo(mymap);	
+
+	//function xử lý edit
+	function editText(e) {
+		let layers = e.layers;
+		var collection = layers.toGeoJSON();
+		var geojson = JSON.stringify(collection, null, 2);
+		window.ReactNativeWebView.postMessage(geojson);
+	}
+	mymap.on('draw:edited', editText);
+
 </script>
 <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>

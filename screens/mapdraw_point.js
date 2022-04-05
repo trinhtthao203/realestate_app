@@ -1,14 +1,13 @@
 import React, { useEffect, useState, useRef } from "react";
 import {
   Alert,
-  TextInput,
   Text,
   SafeAreaView,
   StyleSheet,
   ScrollView,
 } from "react-native";
 import { WebView } from "react-native-webview";
-import html_script_mapdraw_point from "../html_script/html_script_mapdraw_point";
+import html_script_mapdraw from "../html_script/html_script_mapdraw";
 import {
   Button,
   Modal,
@@ -17,15 +16,17 @@ import {
   NativeBaseProvider,
 } from "native-base";
 import axios from "axios";
-import { _refreshMap } from "../Utils/Common";
+import { _setToolPoint } from "../Utils/Common";
 
 const MapDrawPoint = ({ route, navigation }) => {
   const [objectDraw, setObjectDraw] = useState("");
   const [name, setName] = React.useState("");
   const [showModal, setShowModal] = useState(false);
   const Map_Ref = useRef();
-  const { db } = route.params;
 
+  useEffect(() => {
+    _setToolPoint(Map_Ref);
+  }, []);
   const _submitObject = () => {
     return Alert.alert(
       "Are your sure?",
@@ -38,9 +39,7 @@ const MapDrawPoint = ({ route, navigation }) => {
             Map_Ref.current.injectJavaScript(`           
             drawnItems.clearLayers();
             `);
-            navigation.navigate("MapScreen", {
-              db: db,
-            });
+            navigation.navigate("MapScreen");
             axios
               .post("/realestate/draw", {
                 name: name,
@@ -50,6 +49,8 @@ const MapDrawPoint = ({ route, navigation }) => {
               .catch((error) => {
                 console.error("There was an error!", error);
               });
+
+            setName("");
           },
         },
         {
@@ -75,7 +76,18 @@ const MapDrawPoint = ({ route, navigation }) => {
 
   let latlng;
   let btnSave;
-  if (objectDraw && objectDraw.features[0]) {
+  if (!objectDraw || !objectDraw.features[0]) {
+    latlng = <Text>Bạn chưa chọn điểm</Text>;
+    btnSave = (
+      <Button
+        onPress={() => {
+          alert("Vui lòng chọn địa điểm");
+        }}
+      >
+        Save
+      </Button>
+    );
+  } else {
     latlng = (
       <Text>{JSON.stringify(objectDraw.features[0].geometry.coordinates)}</Text>
     );
@@ -89,17 +101,6 @@ const MapDrawPoint = ({ route, navigation }) => {
         Save
       </Button>
     );
-  } else {
-    latlng = <Text>Bạn chưa chọn điểm</Text>;
-    btnSave = (
-      <Button
-        onPress={() => {
-          alert("Vui lòng chọn địa điểm");
-        }}
-      >
-        Save
-      </Button>
-    );
   }
 
   return (
@@ -108,7 +109,7 @@ const MapDrawPoint = ({ route, navigation }) => {
         <NativeBaseProvider>
           <WebView
             ref={Map_Ref}
-            source={{ html: html_script_mapdraw_point }}
+            source={{ html: html_script_mapdraw }}
             style={styles.Webview}
             onMessage={onMessage}
           />

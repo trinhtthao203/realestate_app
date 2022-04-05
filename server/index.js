@@ -6,7 +6,7 @@ const { response } = require("express");
 const bodyParser = require("body-parser");
 
 var corsOptions = {
-  origin: "http://10.10.43.127",
+  origin: "http://10.10.33.14",
   optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
 };
 
@@ -52,15 +52,13 @@ app.post("/realestate/draw", (req, res) => {
       });
     }
     const geojson = objectDraw.features[0].geometry;
+
     const data = [name, geojson];
     const query =
       "INSERT INTO realestate(name, coordinates) VALUES ($1,ST_GeomFromGeoJSON($2));";
     pool.query(query, data, (err, response) => {
       if (err) {
-        return res.status(403).json({
-          error: true,
-          message: "Có lỗi vui lòng kiểm tra lại!",
-        });
+        console.log(err);
       } else {
         return res.json(response.rows);
       }
@@ -88,4 +86,56 @@ app.delete("/realestate/delete", (req, res) => {
       }
     });
   });
+});
+
+app.put("/realestate/editname", (req, res) => {
+  const { id, name } = req.body;
+  try {
+    if (!id || !name) {
+      console.log("Lỗi không load được dữ liệu");
+    } else {
+      console.log(name);
+      console.log(id);
+
+      const data = [name, id];
+      const query = `UPDATE realestate SET name = $1WHERE id=$2`;
+      pool.query(query, data, (err, response) => {
+        if (err) {
+          console.log(err);
+        } else {
+          return res.json(response.rows);
+          // getdata(response.rows);
+        }
+      });
+    }
+  } catch (err) {
+    console.log(err);
+  }
+});
+
+app.put("/realestate/editlatlng", (req, res) => {
+  const { editItems } = req.body;
+  try {
+    if (!editItems) {
+      console.log("Lỗi không load được dữ liệu");
+    } else {
+      const id = editItems.features[0].properties.id;
+      const geojson = JSON.stringify(editItems.features[0].geometry);
+
+      console.log(id);
+      console.log(geojson);
+
+      const data = [geojson, id];
+      const query = `UPDATE realestate SET coordinates = ST_GeomFromGeoJSON($1) WHERE id=$2`;
+      pool.query(query, data, (err, response) => {
+        if (err) {
+          console.log(err);
+        } else {
+          return res.json(response.rows);
+        }
+      });
+    }
+  } catch (err) {
+    console.log(err);
+  }
 });

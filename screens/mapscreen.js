@@ -3,10 +3,11 @@ import Constants from "expo-constants";
 import * as Location from "expo-location";
 import {
   View,
-  Text,
   SafeAreaView,
   StyleSheet,
-  TouchableOpacity,
+  ScrollView,
+  Alert,
+  RefreshControl,
 } from "react-native";
 import { WebView } from "react-native-webview";
 import html_script from "../html_script/html_script_mapscreen";
@@ -18,21 +19,45 @@ import {
   Heading,
   Center,
   NativeBaseProvider,
-  Menu,
-  HamburgerIcon,
-  Box,
-  Pressable,
-  VStack,
   Button,
+  Modal,
+  FormControl,
+  Input,
+  VStack,
+  Text,
+  useToast,
 } from "native-base";
-import { _showDBGeoJSON, _showLocationGPS, _refreshMap } from "../Utils/Common";
+import { _showDBGeoJSON, _showLocationGPS } from "../Utils/Common";
+
+const wait = (timeout) => {
+  return new Promise((resolve) => setTimeout(resolve, timeout));
+};
 
 const MapScreen = ({ route, navigation }) => {
   const [msg, setMsg] = useState("");
+  const [errMsg, setErrMsg] = useState("");
   const Map_Ref = useRef();
-  const { db } = route.params;
-  const { isLoading } = route.params;
-  const [delItems, setDelItems] = useState();
+  const [showModal, setShowModal] = useState(false);
+  const [name, setName] = React.useState("");
+  const [editItems, setEditItems] = useState();
+  const [id, setID] = useState();
+
+  const [isLoading, setIsLoading] = useState();
+  const [refreshing, setRefreshing] = React.useState(false);
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    _showDBGeoJSON(Map_Ref);
+    wait(2000).then(() => {
+      setRefreshing(false);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (route.params?.post) {
+      setIsLoading(route.params?.post);
+    }
+  }, [route.params?.post]);
 
   useEffect(() => {
     (async () => {
@@ -50,53 +75,13 @@ const MapScreen = ({ route, navigation }) => {
       let getloca = await Location.getCurrentPositionAsync({});
       setMsg(`[${getloca.coords.latitude}, ${getloca.coords.longitude}]`);
       _showLocationGPS(getloca, Map_Ref);
-      // _showDBGeoJSON(db, Map_Ref);
+      _showDBGeoJSON(Map_Ref);
       // _updateMapScreen(Map_Ref);
       // _showGEOJSONFILE(dlm);
-
-      //Thêm vào nút refresh
-      // _refreshMap(Map_Ref);
     })();
   }, []);
 
-  const [responseData, setResponseData] = useState();
-
-  const fetchData = async () => {
-    try {
-      const result = await axios({
-        method: "GET",
-        url: "/realestate",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-          Accept: "application/json",
-        },
-        params: {
-          search: "parameter",
-        },
-      });
-      setResponseData(result.data);
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
-  //nhận data từ WebView
-  function onMessage(payload) {
-    let dataPayload;
-    try {
-      dataPayload = JSON.parse(payload.nativeEvent.data);
-    } catch (e) {
-      console.log(e);
-    }
-
-    if (Number.isInteger(Number.parseInt(dataPayload[0]))) {
-      _delItems(dataPayload);
-      _showDBGeoJSON(responseData, Map_Ref);
-    } else {
-      console.log(dataPayload);
-    }
-  }
-
+  //gửi id cho server để xóa item
   function _delItems(id) {
     try {
       axios
@@ -108,9 +93,75 @@ const MapScreen = ({ route, navigation }) => {
     } catch (err) {
       console.log(err);
     }
-    fetchData();
   }
 
+  //Nhận data từ WebView
+  function onMessage(payload) {
+    let dataPayload;
+    try {
+      dataPayload = JSON.parse(payload.nativeEvent.data);
+    } catch (e) {
+      console.log(e);
+    }
+
+    if (Number.isInteger(dataPayload)) {
+      setID(dataPayload);
+      setShowModal(true);
+    } else if (Number.isInteger(Number.parseInt(dataPayload[0]))) {
+      _delItems(dataPayload);
+    } else {
+      console.log(dataPayload);
+      _handleSaveLatLng(dataPayload);
+    }
+  }
+
+  function _handleSaveLatLng(dataPayload) {
+    navigation.navigate("MapScreen");
+    axios
+      .put("/realestate/editlatlng", {
+        editItems: dataPayload,
+      })
+      .then((response) => console.log("Edit success !!!"))
+      .catch((error) => {
+        console.error("There was an error!", error);
+      });
+  }
+
+  function _handleSaveName() {
+    navigation.navigate("MapScreen");
+    axios
+      .put("/realestate/editname", {
+        id: id,
+        name: name,
+      })
+      .then((response) => console.log("Edit success !!!"))
+      .catch((error) => {
+        console.error("There was an error!", error);
+      });
+  }
+
+  //Xử lý giao diện cho Mapscreen khi sửa
+  const _submitObjectName = () => {
+    return Alert.alert(
+      "Are your sure?",
+      "Are you sure you want to save Edit?",
+      [
+        // The "Yes" button
+        {
+          text: "Yes",
+          onPress: () => {
+            _handleSaveName();
+            setName("");
+          },
+        },
+        {
+          text: "No",
+        },
+      ]
+    );
+  };
+
+  //Return giao diện cho Mapscreen
   let mapscreen;
   if (isLoading) {
     mapscreen = (
@@ -139,82 +190,78 @@ const MapScreen = ({ route, navigation }) => {
             <View style={styles.Text}>
               <Text>Bạn đang ở tọa độ: {msg}</Text>
             </View>
-            <VStack space="2.5" mt="1.5" px="8">
-              <HStack space={3} justifyContent="center">
-                <Button
-                  size="sm"
-                  onPress={() => {
-                    navigation.navigate("MapDrawPoint", {
-                      db: db,
-                    });
-                  }}
-                >
-                  DRAW POINT
-                </Button>
-                <Button
-                  size="sm"
-                  colorScheme="secondary"
-                  onPress={() => {
-                    navigation.navigate("MapDrawLine", {
-                      db: db,
-                    });
-                  }}
-                >
-                  DRAW LINESTRING
-                </Button>
-                <Button
-                  size="sm"
-                  colorScheme="emerald"
-                  onPress={() => {
-                    navigation.navigate("MapDrawPolygon", {
-                      db: db,
-                    });
-                  }}
-                >
-                  DRAW POLYGON
-                </Button>
-              </HStack>
-            </VStack>
           </SafeAreaView>
+          {/* <Button onPress={() => setShowModal(true)}>Save</Button> */}
+          <Modal isOpen={showModal} onClose={() => setShowModal(false)}>
+            <Modal.Content maxWidth="400px">
+              <Modal.CloseButton />
+              <Modal.Header>Đổi tên</Modal.Header>
+              <Modal.Body>
+                <FormControl>
+                  <FormControl.Label>Nhập tên muốn đổi:</FormControl.Label>
+                  <Input
+                    value={name}
+                    placeholder={name}
+                    onChangeText={(e) => setName(e)}
+                  />
+                  <Text color="error.500">{errMsg}</Text>
+                </FormControl>
+              </Modal.Body>
+              <Modal.Footer>
+                <Button.Group space={2}>
+                  <Button
+                    variant="ghost"
+                    colorScheme="blueGray"
+                    onPress={() => {
+                      setShowModal(false);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onPress={() => {
+                      if (!name) {
+                        setErrMsg("Vui lòng nhập tên !!!");
+                      } else {
+                        setShowModal(false);
+                        _submitObjectName();
+                      }
+                    }}
+                  >
+                    Save
+                  </Button>
+                </Button.Group>
+              </Modal.Footer>
+            </Modal.Content>
+          </Modal>
         </NativeBaseProvider>
       </>
     );
   }
-  return <>{mapscreen}</>;
+  return (
+    <>
+      <ScrollView
+        contentContainerStyle={styles.scrollView}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
+        {mapscreen}
+      </ScrollView>
+    </>
+  );
 };
 
 export default MapScreen;
 const styles = StyleSheet.create({
   Container: {
     flex: 1,
-    backgroundColor: "#fff",
-    margin: 5,
   },
   WebView: {
     flex: 2,
-    margin: 20,
   },
-  ButtonArea: {
+  scrollView: {
     flex: 1,
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "center",
-  },
-  Button: {
-    width: 80,
-    padding: 10,
-    borderRadius: 10,
-    backgroundColor: "black",
-    alignItems: "center",
-  },
-  ButtonText: {
-    color: "white",
-    fontWeight: "bold",
-    fontSize: 14,
-  },
-  Text: {
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 5,
+    backgroundColor: "white",
   },
 });
