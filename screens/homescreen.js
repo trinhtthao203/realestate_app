@@ -7,9 +7,7 @@ import {
   Image,
   TouchableOpacity,
 } from "react-native";
-import axios from "axios";
 import { icons } from "../Contants";
-// import {sessionStorage} from '../Utils/Storage';
 
 export default function HomeScreen({ navigation }) {
   return (

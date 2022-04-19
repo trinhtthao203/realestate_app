@@ -23,11 +23,13 @@ import {
   Modal,
   FormControl,
   Input,
-  VStack,
   Text,
-  useToast,
 } from "native-base";
-import { _showDBGeoJSON, _showLocationGPS } from "../Utils/Common";
+import {
+  _showDBGeoJSON,
+  _showLocationGPS,
+  _showGEOJSONFILE,
+} from "../Utils/Common";
 
 const wait = (timeout) => {
   return new Promise((resolve) => setTimeout(resolve, timeout));
@@ -76,8 +78,7 @@ const MapScreen = ({ route, navigation }) => {
       setMsg(`[${getloca.coords.latitude}, ${getloca.coords.longitude}]`);
       _showLocationGPS(getloca, Map_Ref);
       _showDBGeoJSON(Map_Ref);
-      // _updateMapScreen(Map_Ref);
-      // _showGEOJSONFILE(dlm);
+      // _showGEOJSONFILE(dlm, Map_Ref);
     })();
   }, []);
 
@@ -142,23 +143,19 @@ const MapScreen = ({ route, navigation }) => {
 
   //Xử lý giao diện cho Mapscreen khi sửa
   const _submitObjectName = () => {
-    return Alert.alert(
-      "Are your sure?",
-      "Are you sure you want to save Edit?",
-      [
-        // The "Yes" button
-        {
-          text: "Yes",
-          onPress: () => {
-            _handleSaveName();
-            setName("");
-          },
+    return Alert.alert("Chắc chắn thay đổi?", "Bạn chắc chắn muốn đổi tên", [
+      // The "Yes" button
+      {
+        text: "Vâng",
+        onPress: () => {
+          _handleSaveName();
+          setName("");
         },
-        {
-          text: "No",
-        },
-      ]
-    );
+      },
+      {
+        text: "Không",
+      },
+    ]);
   };
 
   //Return giao diện cho Mapscreen

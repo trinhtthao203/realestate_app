@@ -1,14 +1,13 @@
 import React, { useEffect, useState, useRef } from "react";
 import {
   Alert,
-  TextInput,
   Text,
   SafeAreaView,
   StyleSheet,
   ScrollView,
 } from "react-native";
 import { WebView } from "react-native-webview";
-import { _setToolPolygon } from "../Utils/Common";
+import html_script_mapdrawfull from "../html_script/html_script_mapdrawfull";
 import {
   Button,
   Modal,
@@ -17,48 +16,41 @@ import {
   NativeBaseProvider,
 } from "native-base";
 import axios from "axios";
-import html_script_mapdraw from "../html_script/html_script_mapdraw_polygon";
+// import { _setToolPoint } from "../Utils/Common";
 
-const MapDrawPoint = ({ route, navigation }) => {
+const MapDraw = ({ route, navigation }) => {
   const [objectDraw, setObjectDraw] = useState("");
   const [name, setName] = React.useState("");
   const [showModal, setShowModal] = useState(false);
   const Map_Ref = useRef();
 
-  useEffect(() => {
-    _setToolPolygon(Map_Ref);
-  }, []);
-
   const _submitObject = () => {
-    return Alert.alert(
-      "Are your sure?",
-      "Are you sure you want to save POLYGON in map?",
-      [
-        // The "Yes" button
-        {
-          text: "Yes",
-          onPress: () => {
-            Map_Ref.current.injectJavaScript(`           
+    return Alert.alert("Chắc chắn lưu?", "Bạn chắc chắn lưu điểm vừa tạo?", [
+      // The "Yes" button
+      {
+        text: "Vâng",
+        onPress: () => {
+          Map_Ref.current.injectJavaScript(`           
             drawnItems.clearLayers();
             `);
-            navigation.navigate("MapScreen");
-            axios
-              .post("/realestate/draw", {
-                name: name,
-                objectDraw: objectDraw,
-              })
-              .then((response) => console.log(name, objectDraw))
-              .catch((error) => {
-                console.error("There was an error!", error);
-              });
-            setName("");
-          },
+          navigation.navigate("MapScreen");
+          axios
+            .post("/realestate/draw", {
+              name: name,
+              objectDraw: objectDraw,
+            })
+            .then((response) => console.log(name, objectDraw))
+            .catch((error) => {
+              console.error("There was an error!", error);
+            });
+
+          setName("");
         },
-        {
-          text: "No",
-        },
-      ]
-    );
+      },
+      {
+        text: "Hủy",
+      },
+    ]);
   };
 
   function onMessage(payload) {
@@ -77,7 +69,18 @@ const MapDrawPoint = ({ route, navigation }) => {
 
   let latlng;
   let btnSave;
-  if (objectDraw && objectDraw.features[0]) {
+  if (!objectDraw || !objectDraw.features[0]) {
+    latlng = <Text>Bạn chưa tạo đối tượng !!!</Text>;
+    btnSave = (
+      <Button
+        onPress={() => {
+          alert("Vui lòng tạo địa điểm");
+        }}
+      >
+        Save
+      </Button>
+    );
+  } else {
     latlng = (
       <Text>{JSON.stringify(objectDraw.features[0].geometry.coordinates)}</Text>
     );
@@ -91,17 +94,6 @@ const MapDrawPoint = ({ route, navigation }) => {
         Save
       </Button>
     );
-  } else {
-    latlng = <Text>Bạn chưa chọn vùng</Text>;
-    btnSave = (
-      <Button
-        onPress={() => {
-          alert("Vui lòng chọn vùng");
-        }}
-      >
-        Save
-      </Button>
-    );
   }
 
   return (
@@ -110,7 +102,7 @@ const MapDrawPoint = ({ route, navigation }) => {
         <NativeBaseProvider>
           <WebView
             ref={Map_Ref}
-            source={{ html: html_script_mapdraw }}
+            source={{ html: html_script_mapdrawfull }}
             style={styles.Webview}
             onMessage={onMessage}
           />
@@ -118,15 +110,15 @@ const MapDrawPoint = ({ route, navigation }) => {
           <Modal isOpen={showModal} onClose={() => setShowModal(false)}>
             <Modal.Content maxWidth="400px">
               <Modal.CloseButton />
-              <Modal.Header>Save POLYGON to Data</Modal.Header>
+              <Modal.Header>Lưu đối tượng</Modal.Header>
               <Modal.Body>
                 <FormControl>
-                  <FormControl.Label>Name</FormControl.Label>
+                  <FormControl.Label>Tên</FormControl.Label>
                   <Input value={name} onChangeText={(e) => setName(e)} />
                 </FormControl>
                 <FormControl mt="3">
                   <ScrollView>
-                    <FormControl.Label>Location</FormControl.Label>
+                    <FormControl.Label>Vị trí</FormControl.Label>
                     {latlng}
                   </ScrollView>
                 </FormControl>
@@ -140,7 +132,7 @@ const MapDrawPoint = ({ route, navigation }) => {
                       setShowModal(false);
                     }}
                   >
-                    Cancel
+                    HỦY
                   </Button>
                   {btnSave}
                 </Button.Group>
@@ -153,7 +145,7 @@ const MapDrawPoint = ({ route, navigation }) => {
   );
 };
 
-export default MapDrawPoint;
+export default MapDraw;
 const styles = StyleSheet.create({
   Container: {
     flex: 1,

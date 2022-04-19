@@ -95,7 +95,7 @@ export const _showLocationGPS = (location, Map_Ref) => {
         mymap.removeLayer(circle);
       }
         marker = L.marker([${lat}, ${long}]);
-        circle = L.circle([${lat}, ${long}], { radius: ${accuracy} });
+        circle = L.circle([${lat}, ${long}], { radius: ${accuracy}/100 });
         var featureGroup = L.featureGroup([marker, circle]).addTo(mymap);
         mymap.fitBounds(featureGroup.getBounds());
     `);
@@ -121,6 +121,7 @@ export const _setToolPoint = (Map_Ref) => {
     var options = {
       position: 'topleft',
       draw: {
+			  marker:true,
         polygon: false,
         polyline: false,
         circle:false,

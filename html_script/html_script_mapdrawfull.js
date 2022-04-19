@@ -1,4 +1,4 @@
-const html_script_mapdraw_linestring = `
+const html_script_mapdraw = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -51,34 +51,47 @@ const html_script_mapdraw_linestring = `
 	//Định các style cho point, line và polygon
 	var lineStyle={color: "blue", weight: 5};
 	var polygonStyle={color: "pink", fillColor: "black", weight: 4};
-		
-	//Các option cho công cụ vẽ
-	var options = {
-		position: 'topleft',
-		draw: {
-			polygon: false,
-			polyline: true,
-			circle:false,
-			rectangle:false,
-			marker:false,
-		},
-		edit: {
-			featureGroup: drawnItems,	//REQUIRED!!
-			delete:true,
-			edit:true
-		}
-	};
-    var drawControl = new L.Control.Draw(options).addTo(mymap);
 	
+	var drawnItems;
+    var drawControl;
+
+    if(drawnItems){
+      mymap.removeLayer(drawnItems);
+    }
+    if(drawControl){
+      mymap.removeControl(drawControl);
+    }
+
+    //khai báo featuregroup để vẽ
+    drawnItems = L.featureGroup().addTo(mymap);	
+          
+    //Các option cho công cụ vẽ
+    var options = {
+      position: 'topleft',
+      draw: {
+		marker:true,
+        polygon: true,
+        polyline: true,
+        circle:false,
+        rectangle:true
+      },
+      edit: {
+        featureGroup: drawnItems,	//REQUIRED!!
+        delete:true,
+        edit:true
+      }
+    };
+    drawControl = new L.Control.Draw(options).addTo(mymap);
+
 	var k=1;
 	//Khi vẽ thì thêm vào lớp drawnItems
 	function showText(e) {	
-		if(k>=2) alert('Chỉ được tạo một điểm !!!');
+		if(k>=2) alert('Chỉ được tạo một đối tượng !!!');
 		else{
+			k++;
 			var layer = e.layer;
 			layer.addTo(drawnItems);
 			sendDataToReactNativeApp();
-			k++;
 		}
 	}
 
@@ -112,6 +125,7 @@ const html_script_mapdraw_linestring = `
 		var geojson1 = JSON.stringify(collection, null, 2);	
 		window.ReactNativeWebView.postMessage(geojson1);
 	};
+
 	</script>
 	<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
@@ -120,4 +134,4 @@ const html_script_mapdraw_linestring = `
 </html>
 `;
 
-export default html_script_mapdraw_linestring;
+export default html_script_mapdraw;
