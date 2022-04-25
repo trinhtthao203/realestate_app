@@ -1,34 +1,49 @@
 import "react-native-gesture-handler";
-import { StyleSheet, View } from "react-native";
-import React, { useEffect, useState } from "react";
-import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { StyleSheet, View, Text, TouchableOpacity } from "react-native";
+import { createDrawerNavigator } from "@react-navigation/drawer";
+import { NavigationContainer } from "@react-navigation/native";
+import React, { useEffect, useMemo, useState } from "react";
+import { AuthContext } from "./Components/Context";
+import { icons, theme } from "./Contants";
+import axios from "axios";
 
-import MapScreen from "./screens/mapscreen";
-import HomeScreen from "./screens/homescreen";
-import MapDraw from "./screens/mapdraw";
+import { CustomDrawer } from "./screens/CustomDrawer";
+import ActivityScreen from "./screens/ActivityScreen";
+import HomeScreen from "./screens/HomeScreen";
+import MapScreen from "./screens/MapScreen";
+import MapDraw from "./screens/MapDraw";
+import SignUp from "./screens/SignUp";
+import Login from "./screens/Login";
 
 const Stack = createNativeStackNavigator();
-
-import {
-  createDrawerNavigator,
-  DrawerContentScrollView,
-  DrawerItemList,
-} from "@react-navigation/drawer";
 const Drawer = createDrawerNavigator();
 
-import axios from "axios";
-import { Center, NativeBaseProvider, Text, Image } from "native-base";
-//TTHL
 axios.defaults.baseURL = "http://10.1.14.193:4000";
-//KTX
-// axios.defaults.baseURL = "http://10.1.15.213:4000";
-// axios.defaults.baseURL = "http://192.168.246.91:4000";
 
 export default function App() {
   const [responseData, setResponseData] = useState();
   const [isLoading, setIsLoading] = useState(true);
   const [isLogin, setIsLogin] = useState(false);
+  const [userToken, setUserToken] = useState(null);
+
+  const authContext = useMemo(
+    () => ({
+      signIn: () => {
+        setUserToken("khir");
+        setIsLoading(false);
+      },
+      signOut: () => {
+        setUserToken(null);
+        setIsLoading(false);
+      },
+      signUp: () => {
+        setUserToken("khir");
+        setIsLoading(false);
+      },
+    }),
+    []
+  );
 
   const fetchData = async () => {
     try {
@@ -55,73 +70,54 @@ export default function App() {
     fetchData();
   }, []);
 
-  let textDrawer;
-  if (isLogin) {
-    textDrawer = (
-      <Text fontSize="md" color="tertiary.50">
-        Họ tên
-      </Text>
-    );
-  } else {
-    textDrawer = (
-      <Text fontSize="md" color="tertiary.50">
-        Đăng nhập /Đăng ký
-      </Text>
-    );
+  if (isLoading) {
+    return <ActivityScreen />;
   }
 
-  const CustomDrawer = (props) => {
-    return (
-      <DrawerContentScrollView {...props}>
-        <NativeBaseProvider>
-          <Center h="40" w="280" bg="#134e4a" shadow={3}>
-            <Image
-              source={{
-                uri: "https://cdn-icons.flaticon.com/png/512/560/premium/560277.png?token=exp=1650339292~hmac=a1c488d076145d7f71000f98880a9965",
-              }}
-              width={100}
-              height={100}
-            />
-            {textDrawer}
-          </Center>
-        </NativeBaseProvider>
-        <DrawerItemList {...props} />
-      </DrawerContentScrollView>
-    );
-  };
-
-  const DrawerNavigation = () => {
-    return (
-      <Drawer.Navigator
-        initialRouteName="Home"
-        drawerContent={(props) => <CustomDrawer {...props} />}
-      >
-        <Drawer.Screen
-          name="Home"
-          component={HomeScreen}
-          options={{ title: "Trang chủ" }}
-          initialParams={{
-            responseData: responseData,
-            isLoading: isLoading,
-          }}
-        />
-        <Drawer.Screen
-          name="MapScreen"
-          component={MapScreen}
-          options={{ title: "Vị trí hiện tại" }}
-        />
-        <Drawer.Screen
-          name="MapDraw"
-          component={MapDraw}
-          options={{ title: "Thêm đối tượng" }}
-        />
-      </Drawer.Navigator>
-    );
-  };
-
   return (
-    <NavigationContainer>
-      <DrawerNavigation />
-    </NavigationContainer>
+    <AuthContext.Provider value={authContext}>
+      <NavigationContainer>
+        <Drawer.Navigator
+          drawerContent={(props) => <CustomDrawer {...props} />}
+        >
+          {userToken == null ? (
+            <>
+              <Drawer.Screen
+                name="Login"
+                component={Login}
+                options={{ headerShown: false }}
+              />
+              <Drawer.Screen
+                name="HomeScreen"
+                component={HomeScreen}
+                options={{ title: "Trang chủ" }}
+                initialParams={{
+                  responseData: responseData,
+                  isLoading: isLoading,
+                }}
+              />
+            </>
+          ) : (
+            <Drawer.Screen
+              name="HomeScreen"
+              component={HomeScreen}
+              options={{ title: "Trang chủ" }}
+              initialParams={{
+                responseData: responseData,
+                isLoading: isLoading,
+              }}
+            />
+          )}
+
+          <Drawer.Screen name="MapScreen" component={MapScreen} />
+          <Drawer.Screen name="MapDraw" component={MapDraw} />
+          <Drawer.Screen
+            name="SignUp"
+            component={SignUp}
+            options={{ headerShown: false }}
+          />
+        </Drawer.Navigator>
+      </NavigationContainer>
+    </AuthContext.Provider>
   );
 }

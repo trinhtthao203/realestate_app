@@ -1,0 +1,4 @@
+GET http://localhost:4000/taikhoan
+
+##
+GET http://localhost:4000/taikhoan/dangnhap

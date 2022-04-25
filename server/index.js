@@ -2,25 +2,88 @@ const express = require("express");
 const app = express();
 const pool = require("./db");
 const cors = require("cors");
-const { response } = require("express");
 const bodyParser = require("body-parser");
-
-var corsOptions = {
-  origin: "http://10.10.33.14",
-  optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
-};
 
 app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 
 //Middleware
-app.use(cors(corsOptions));
+app.use(cors());
 app.use(express.json());
 
 app.listen(4000, () => {
   console.log("Server is listening on port 4000");
 });
-// respond with "hello world" when a GET request is made to the homepage
+
+//Lấy du lieu cua tai khoan
+app.get("/taikhoan", (req, res) => {
+  try {
+    pool.query(`SELECT * FROM taikhoan`, (err, response) => {
+      if (err) {
+        console.log(err);
+      } else {
+        res.json(response.rows);
+      }
+    });
+  } catch (err) {
+    console.error(err.message);
+  }
+});
+
+app.get("/taikhoan/dangnhap", (req, res) => {
+  const { email, passwd } = req.body;
+  try {
+    pool.query(
+      `SELECT * FROM taikhoan WHERE email=$1 AND passwd=$2`,
+      (err, response) => {
+        if (err) {
+          console.log(err);
+        } else {
+          res.json(response.rows);
+        }
+      }
+    );
+  } catch (err) {
+    console.error(err.message);
+  }
+});
+
+app.post("/taikhoan/dangky", (req, res) => {
+  try {
+    const taikhoan = {
+      email: req.body.email,
+      passwd: req.body.passwd,
+      hoten: req.body.hotem,
+      gioitinh: req.body.gioitinh,
+      ngaysinh: req.body.ngaysinh,
+      anhdaidien: req.body.anhdaidien,
+      quyensd: 1,
+    };
+    pool.query(
+      `INSERT INTO taikhoan(email, passwd, hoten, gioitinh, ngaysinh, anhdaidien, quyensd) VALUES($1, $2, $3, $4, $5, $6, $7)`,
+      [
+        taikhoan.email,
+        taikhoan.passwd,
+        taikhoan.hoten,
+        taikhoan.gioitinh,
+        taikhoan.ngaysinh,
+        taikhoan.anhdaidien,
+        taikhoan.quyensd,
+      ],
+      (err, response) => {
+        if (err) {
+          console.log(err);
+        } else {
+          res.json(response.rows);
+          res.status(201).send();
+        }
+      }
+    );
+  } catch (err) {
+    console.error(err.message);
+  }
+});
+
 app.get("/realestate", (req, res) => {
   try {
     pool.query(
