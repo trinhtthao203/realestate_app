@@ -8,21 +8,18 @@ import {
 } from "@react-navigation/drawer";
 
 import { icons, theme } from "../Contants";
-import { StyleSheet, View, TouchableOpacity } from "react-native";
-import {
-  Avatar,
-  Title,
-  Caption,
-  Paragraph,
-  Drawer,
-  Text,
-  TouchableRipple,
-  Switch,
-} from "react-native-paper";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { StyleSheet, View } from "react-native";
+import { Avatar, Title, Caption, Drawer } from "react-native-paper";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 
-export function CustomDrawer(props) {
+export function CustomDrawer({ props }) {
+  // const user = props.screenProps.user;
+  // useEffect(() => {
+  //   if (route.params?.user) {
+  //     user = route.params?.user;
+  //   }
+  // }, [route.params?.user]);
+
   return (
     <View style={{ flex: 1 }}>
       <DrawerContentScrollView {...props}>
@@ -31,8 +28,8 @@ export function CustomDrawer(props) {
             <View style={{ flexDirection: "row", marginTop: 15 }}>
               <Avatar.Image source={icons.ic_user} size={50} />
               <View style={{ marginLeft: 15, flexDirection: "column" }}>
-                <Title style={styles.title}>User Name 00000000</Title>
-                <Caption style={styles.caption}>@username</Caption>
+                <Title style={styles.title}>Trần Văn Hoàng</Title>
+                <Caption style={styles.caption}>tvhoang@gmail.com</Caption>
               </View>
             </View>
           </View>
@@ -73,7 +70,9 @@ export function CustomDrawer(props) {
             <Icon name="exit-to-app" color={color} size={size} />
           )}
           label="Đăng xuất"
-          onPress={() => {}}
+          onPress={() => {
+            props.navigation.navigate("Login");
+          }}
         />
       </Drawer.Section>
     </View>

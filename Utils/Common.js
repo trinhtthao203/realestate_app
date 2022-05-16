@@ -16,68 +16,8 @@ export const _showGEOJSONFILE = (data, Map_Ref) => {
     `);
 };
 
-//show object on map with API data
-export const _showDBGeoJSON = async (Map_Ref) => {
-  try {
-    const result = await axios({
-      method: "GET",
-      url: "/realestate",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        Accept: "application/json",
-      },
-      params: {
-        search: "parameter",
-      },
-    });
-    const responseData = result.data;
-
-    Map_Ref.current.injectJavaScript(`
-    var drawnItems;
-    var drawControl;
-
-    if(drawnItems){
-      mymap.removeLayer(drawnItems);
-    }
-    if(drawControl){
-      mymap.removeControl(drawControl);
-    }
-    var geo2=${JSON.stringify(responseData)};
-    drawnItems = L.featureGroup().addTo(mymap);
-  
-    var geo2Layer = L.geoJSON(geo2,{
-            onEachFeature:onEachFeature,
-            style: function (feature) {	 //qui định style cho các đối tượng
-              switch (feature.geometry.type) {
-                case 'LineString':   return lineStyle;
-                case 'Polygon':   return polygonStyle;
-              }
-            },
-            pointToLayer: function (feature, latlng) {
-              return L.circleMarker(latlng, geojsonMarkerOptions);
-            }
-        })
-  
-      geo2Layer.eachLayer(function(layer) {
-          layer.addTo(drawnItems);
-      });
-  
-    //Các option cho công cụ vẽ
-      var options = {
-    	position: 'topleft',
-    	draw: false,
-    	edit: {
-    	  featureGroup: drawnItems,	//REQUIRED!!
-    	}
-    }
-    drawControl = new L.Control.Draw(options).addTo(mymap);
-    `);
-  } catch (err) {
-    console.log(err);
-  }
-};
-
-//show location GPS on map
+//Hiển thị vị trí GPS lên map
+//Màn hình MapScreen -> Đánh dấu/ Zoom vị trí GPS của người dùng
 export const _showLocationGPS = (location, Map_Ref) => {
   if (!location) {
     console.log("Your browser dont support geolocation feature!");
@@ -85,7 +25,6 @@ export const _showLocationGPS = (location, Map_Ref) => {
     var lat = location.coords.latitude;
     var long = location.coords.longitude;
     var accuracy = location.coords.accuracy;
-
     Map_Ref.current.injectJavaScript(`
       var marker, circle;
       if (marker) {
@@ -102,107 +41,266 @@ export const _showLocationGPS = (location, Map_Ref) => {
   }
 };
 
-export const _setToolPoint = (Map_Ref) => {
-  Map_Ref.current.injectJavaScript(`
-    var drawnItems;
-    var drawControl;
-
-    if(drawnItems){
-      mymap.removeLayer(drawnItems);
-    }
-    if(drawControl){
-      mymap.removeControl(drawControl);
-    }
-
-    //khai báo featuregroup để vẽ
-    drawnItems = L.featureGroup().addTo(mymap);	
-          
-    //Các option cho công cụ vẽ
-    var options = {
-      position: 'topleft',
-      draw: {
-			  marker:true,
-        polygon: false,
-        polyline: false,
-        circle:false,
-        rectangle:false
+//Hiển thị các đối tượng trên MapScreen
+//Xử lí html leaflet của MapScreen -> Hiển thị dlieu lên Map với 2 player cho người dùng
+export const _showMapScreen = async (Map_Ref) => {
+  try {
+    //Tải các dữ liệu bds về
+    const RealEstate = await axios({
+      method: "GET",
+      url: "/realestate",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Accept: "application/json",
       },
-      edit: {
-        featureGroup: drawnItems,	//REQUIRED!!
-        delete:true,
-        edit:true
-      }
+      params: {
+        search: "parameter",
+      },
+    });
+    const responseRE = RealEstate.data;
+
+    //Tải các dữ liệu vqh về
+    const PlanningArea = await axios({
+      method: "GET",
+      url: "/planning-area",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Accept: "application/json",
+      },
+      params: {
+        search: "parameter",
+      },
+    });
+    const responsePA = PlanningArea.data;
+
+    Map_Ref.current.injectJavaScript(`
+    
+    if(layerControl){
+      mymap.removeControl(layerControl);
+      mymap.removeLayer(grpRE);
+      mymap.removeLayer(grpPA);
+    }
+    var layerControl ;
+    var geoRE=${JSON.stringify(responseRE)};
+    var geoPA=${JSON.stringify(responsePA)};
+    
+    //Định các style cho point, line và polygon
+    var lineStyle={color: "blue", weight: 5};
+    var lineStylePA={color: "red", weight: 5};
+    var polygonStyle={color: "pink", fillColor: "black", weight: 4};
+    var polygonStylePA={color: "yellow", fillColor: "blue", weight: 4};
+    var geojsonMarkerOptions = {
+      radius: 8,
+      fillColor: "#ff7800",
+      color: "#000",
+      weight: 1,
+      opacity: 1,
+      fillOpacity: 0.8
     };
-    drawControl = new L.Control.Draw(options).addTo(mymap);
- `);
+
+    function onEachFeature(feature, layer) {
+      // does this feature have a property named popupContent?
+      if (feature.properties && feature.properties.name ) {
+        layer.bindPopup('<h3>'+feature.properties.name+'</h3>');
+      }
+    }
+    var geoRELayer = L.geoJSON(geoRE,{
+      onEachFeature:onEachFeature,
+      style: function (feature) {	 //qui định style cho các đối tượng
+        switch (feature.geometry.type) {
+          case 'LineString':   return lineStyle;
+            case 'Polygon':   return polygonStyle;
+          }
+        },
+        pointToLayer: function (feature, latlng) {
+          return L.circleMarker(latlng, geojsonMarkerOptions);
+        }
+      })
+
+      function onEachFeaturePA(feature, layer) {
+        // does this feature have a property named popupContent?
+        if (feature.properties && feature.properties.name ) {
+          layer.bindPopup('<h3>'+feature.properties.name+'</h3>'+
+          '<h5>Địa chỉ: '+feature.properties.diachi+'</h5>'+
+          '<h5>Mô tả: '+feature.properties.mota+'</h5>');
+        }
+      }
+      
+      var geoPALayer = L.geoJSON(geoPA,{
+        onEachFeature:onEachFeaturePA,
+        style: function (feature) {
+          switch (feature.geometry.type) {
+            case 'LineString':   return lineStylePA;
+            case 'Polygon':   return polygonStylePA;
+          }
+        },
+        pointToLayer: function (feature, latlng) {
+          return L.circleMarker(latlng, geojsonMarkerOptions);
+        }
+      })
+      
+      var grpRE = L.layerGroup();
+      geoRELayer.eachLayer(function(layer) {
+        layer.addTo(grpRE);
+      });
+      
+      var grpPA = L.layerGroup();
+      geoPALayer.eachLayer(function(layer) {
+        layer.addTo(grpPA);
+      });
+      
+      var baseMaps = {
+        "OSM": osm,
+      };
+      
+      var overlayMaps = {
+        "Bất động sản": grpRE,
+        "Vùng quy hoạch": grpPA
+      };
+      
+      layerControl = L.control.layers(baseMaps, overlayMaps).addTo(mymap);
+      `);
+  } catch (err) {
+    console.log(err);
+  }
 };
 
-export const _setToolLineString = (Map_Ref) => {
+//Hiển thị các đối tượng trên RealEstate
+export const _showRealEstate = async (Map_Ref) => {
+  //Get data Real Estate
+  const RealEstate = await axios({
+    method: "GET",
+    url: "/realestate",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      Accept: "application/json",
+    },
+    params: {
+      search: "parameter",
+    },
+  });
+  const responseRE = RealEstate.data;
+
   Map_Ref.current.injectJavaScript(`
-  var drawnItems;
-  var drawControl;
+    if(realEstate){
+      mymap.removeLayer(realEstate);
+    }
 
-  if(drawnItems){
-    mymap.removeLayer(drawnItems);
-  }
-  if(drawControl){
-    mymap.removeControl(drawControl);
-  }
+    var realEstate = L.featureGroup().addTo(mymap);	
+    var geoRE=${JSON.stringify(responseRE)};
 
-  //khai báo featuregroup để vẽ
-  drawnItems = L.featureGroup().addTo(mymap);	
-      
-  //Các option cho công cụ vẽ
-	var options = {
-		position: 'topleft',
-		draw: {
-			polygon: false,
-			polyline: true,
-			circle:false,
-			rectangle:false,
-			marker:false,
-		},
-		edit: {
-			featureGroup: drawnItems,	//REQUIRED!!
-			delete:true,
-			edit:true
-		}
-	};
-  drawControl = new L.Control.Draw(options).addTo(mymap);
+    function handleUpdateName(id){
+      window.ReactNativeWebView.postMessage(JSON.stringify("name "+id));
+    }
+
+    function handleDel(id){
+      window.ReactNativeWebView.postMessage(id);
+    }
+
+    function onEachFeatureRE(feature, layer) {
+      if (feature.properties && feature.properties.name ) {
+        layer.bindPopup('<h5>'+feature.properties.name+'</h5>'+
+          '<button type="button" class="btn btn-primary sidebar-open-button" onclick="handleUpdateName('+feature.properties.id+')">Sửa tên</button>'+ ' ' +
+          '<button type="button" class="btn btn-primary sidebar-open-button" onclick="handleDel('+feature.properties.id+')">Xóa</button>'
+          );
+      }
+    }
+
+    var geoRELayer = L.geoJSON(geoRE,{
+      onEachFeature:onEachFeatureRE,
+      style: function (feature) {	 //qui định style cho các đối tượng
+        switch (feature.geometry.type) {
+          case 'LineString':   return lineStyle;
+          case 'Polygon':   return polygonStyle;
+        }
+      },
+      pointToLayer: function (feature, latlng) {
+        return L.circleMarker(latlng, geojsonMarkerOptions);
+      }
+    })
+
+    geoRELayer.eachLayer(function(layer) {
+        layer.addTo(realEstate);
+    });
   `);
 };
 
-export const _setToolPolygon = (Map_Ref) => {
+//Hiển thị các đối tượng trên PlanningArea
+export const _showPlanningArea = async (Map_Ref) => {
+  //Tải các dữ liệu VQH về
+  const PlanningArea = await axios({
+    method: "GET",
+    url: "/planning-area",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      Accept: "application/json",
+    },
+    params: {
+      search: "parameter",
+    },
+  });
+  const responsePA = PlanningArea.data;
+
   Map_Ref.current.injectJavaScript(`
-    var drawnItems;
-    var drawControl;
-
-    if(drawnItems){
-      mymap.removeLayer(drawnItems);
-    }
-    if(drawControl){
-      mymap.removeControl(drawControl);
-    }
-
-    //khai báo featuregroup để vẽ
-    drawnItems = L.featureGroup().addTo(mymap);	
-          
-    //Các option cho công cụ vẽ
-    var options = {
-      position: 'topleft',
-      draw: {
-        polygon: true,
-        polyline: false,
-        circle:false,
-        rectangle:true,
-        marker:false,
-      },
-      edit: {
-        featureGroup: drawnItems,	//REQUIRED!!
-        delete:true,
-        edit:true
+      if(planningArea){
+        mymap.removeLayer(planningArea);
       }
-    };
-    drawControl = new L.Control.Draw(options).addTo(mymap);
- `);
+  
+      var planningArea = L.featureGroup().addTo(mymap);	
+      var geoPA=${JSON.stringify(responsePA)};
+  
+      function handleUpdate(id){
+        window.ReactNativeWebView.postMessage(JSON.stringify("name "+id));
+      }
+  
+      function handleDel(id){
+        window.ReactNativeWebView.postMessage(id);
+      }
+  
+      function onEachFeaturePA(feature, layer) {
+        if (feature.properties && feature.properties.name ) {
+          layer.bindPopup('<h5>'+feature.properties.name+'</h5>'+
+            '<button type="button" class="btn btn-primary sidebar-open-button" onclick="handleUpdate('+feature.properties.idvqh+')">Sửa thông tin</button>'+ ' ' +
+            '<button type="button" class="btn btn-primary sidebar-open-button" onclick="handleDel('+feature.properties.idvqh+')">Xóa</button>'
+            );
+        }
+      }
+  
+      var geoPALayer = L.geoJSON(geoPA,{
+        onEachFeature:onEachFeaturePA,
+        style: function (feature) {	 //qui định style cho các đối tượng
+          switch (feature.geometry.type) {
+            case 'LineString':   return lineStyle;
+            case 'Polygon':   return polygonStyle;
+          }
+        },
+        pointToLayer: function (feature, latlng) {
+          return L.circleMarker(latlng, geojsonMarkerOptions);
+        }
+      })
+  
+      geoPALayer.eachLayer(function(layer) {
+          layer.addTo(planningArea);
+      });
+    `);
 };
+
+function isMarkerInsidePolygon(marker, poly) {
+  var polyPoints = poly.getLatLngs()[0];
+  var x = marker.getLatLng().lat,
+    y = marker.getLatLng().lng;
+
+  var inside = false;
+  for (var i = 0, j = polyPoints.length - 1; i < polyPoints.length; j = i++) {
+    var xi = polyPoints[i].lat,
+      yi = polyPoints[i].lng;
+    var xj = polyPoints[j].lat,
+      yj = polyPoints[j].lng;
+
+    var intersect =
+      yi > y != yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
+    if (intersect) inside = !inside;
+  }
+
+  return inside;
+}

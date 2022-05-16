@@ -15,11 +15,46 @@ import {
 import axios from "axios";
 import { COLORS } from "../Contants/theme";
 import { TouchableOpacity } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default ({ navigation }) => {
-  const [email, setEmail] = useState("");
-  const [passwd, serPasswd] = useState("");
-  const [errMsg, setErrMsg] = useState("");
+  const [email, setEmail] = useState();
+  const [passwd, setPasswd] = useState();
+  const [error, setError] = useState("");
+  const [user, setUser] = useState();
+
+  const storeData = async (value) => {
+    try {
+      await AsyncStorage.setItem("user", value);
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  const _handleLogIn = () => {
+    setError(null);
+    axios
+      .post("/taikhoan/dangnhap", {
+        email: email,
+        passwd: passwd,
+      })
+      .then((response) => {
+        console.log("login success");
+        setUser(response.data);
+        storeData(response.data);
+        navigation.navigate("HomeScreen", { user: user });
+        setEmail("");
+        setPasswd("");
+      })
+      .catch((error) => {
+        if (error.response.status === 401)
+          setError(error.response.data.message);
+        else if (error.response.status === 400)
+          setError(error.response.data.message);
+        else setError("Lỗi. Vui lòng thử lại lần nữa.");
+        setPasswd("");
+      });
+  };
 
   return (
     <NativeBaseProvider>
@@ -61,7 +96,7 @@ export default ({ navigation }) => {
                 <Input
                   type="password"
                   value={passwd}
-                  onChangeText={(val) => serPasswd(val)}
+                  onChangeText={(val) => setPasswd(val)}
                 />
                 <Link
                   _text={{
@@ -75,12 +110,11 @@ export default ({ navigation }) => {
                   Quên mật khẩu?
                 </Link>
               </FormControl>
+              <Text style={{ color: COLORS.error700 }}>{error}</Text>
               <Button
                 mt="2"
                 colorScheme="indigo"
-                onPress={() => {
-                  navigation.navigate("HomeScreen");
-                }}
+                onPress={() => _handleLogIn()}
               >
                 Đăng nhập
               </Button>

@@ -13,8 +13,11 @@ export const COLORS = {
 
   indigo500: "#6366f1",
 
+  error700: "#b91c1c",
+
   warmGrey100: "#f4f4f5",
   warmGrey200: "#e7e5e4",
+  warmGrey600: "#57534e",
   warmGrey800: "#292524",
 
   transparent: "transparent",

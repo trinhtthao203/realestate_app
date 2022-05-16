@@ -7,25 +7,31 @@ import {
   Image,
   TouchableOpacity,
 } from "react-native";
-import { icons } from "../Contants";
+import { TouchableHighlight } from "react-native-gesture-handler";
+import imgs from "../Contants/imgs";
+import icons from "../Contants/icons";
 
-export default function HomeScreen({ navigation }) {
+export default function HomeScreen() {
   return (
     <View style={styles.Container}>
+      <View>
+        <Text
+          style={{
+            textAlign: "center",
+            color: "#218C95",
+            fontWeight: "bold",
+            fontSize: 20,
+          }}
+        >
+          SRES
+        </Text>
+        <Text style={{ color: "#878D9A" }}>Search Real Estate</Text>
+      </View>
       <Image
-        source={icons.map_icon_color}
+        source={imgs.house_image}
         resizeMode="contain"
-        style={{ width: 70, height: 70 }}
+        style={{ width: "100%", height: "50%" }}
       />
-      <Text style={styles.txtStyle}>Welcome to Demo HomeApp</Text>
-      <TouchableOpacity
-        onPress={() => {
-          /* 1. Navigate to the Details */
-          navigation.navigate("MapScreen");
-        }}
-      >
-        <Text style={styles.textButton}>☁ Go to Details ➽</Text>
-      </TouchableOpacity>
     </View>
   );
 }
@@ -35,8 +41,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#60a3bc",
-    margin: 5,
+    backgroundColor: "#FCFCFC",
   },
   txtStyle: {
     color: "#f7f1e3",

@@ -7,53 +7,28 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
-  RefreshControl,
 } from "react-native";
 import { WebView } from "react-native-webview";
 import html_script from "../html_script/html_script_mapscreen";
 import dlm from "../html_script/dulieumau.json";
-import axios from "axios";
 import {
   Spinner,
   HStack,
   Heading,
   Center,
   NativeBaseProvider,
-  Button,
-  Modal,
-  FormControl,
-  Input,
   Text,
 } from "native-base";
 import {
-  _showDBGeoJSON,
   _showLocationGPS,
   _showGEOJSONFILE,
+  _showMapScreen,
 } from "../Utils/Common";
-
-const wait = (timeout) => {
-  return new Promise((resolve) => setTimeout(resolve, timeout));
-};
 
 const MapScreen = ({ route, navigation }) => {
   const [msg, setMsg] = useState("");
-  const [errMsg, setErrMsg] = useState("");
   const Map_Ref = useRef();
-  const [showModal, setShowModal] = useState(false);
-  const [name, setName] = React.useState("");
-  const [editItems, setEditItems] = useState();
-  const [id, setID] = useState();
-
   const [isLoading, setIsLoading] = useState();
-  const [refreshing, setRefreshing] = React.useState(false);
-
-  const onRefresh = React.useCallback(() => {
-    setRefreshing(true);
-    _showDBGeoJSON(Map_Ref);
-    wait(2000).then(() => {
-      setRefreshing(false);
-    });
-  }, []);
 
   useEffect(() => {
     if (route.params?.post) {
@@ -77,86 +52,17 @@ const MapScreen = ({ route, navigation }) => {
       let getloca = await Location.getCurrentPositionAsync({});
       setMsg(`[${getloca.coords.latitude}, ${getloca.coords.longitude}]`);
       _showLocationGPS(getloca, Map_Ref);
-      _showDBGeoJSON(Map_Ref);
+      _showMapScreen(Map_Ref);
       // _showGEOJSONFILE(dlm, Map_Ref);
     })();
   }, []);
 
-  //gửi id cho server để xóa item
-  function _delItems(id) {
-    try {
-      axios
-        .delete("/realestate/delete", { data: { id: id } })
-        .then((response) => console.log(response.data))
-        .catch((error) => {
-          console.error("There was an error! ", error);
-        });
-    } catch (err) {
-      console.log(err);
-    }
-  }
-
-  //Nhận data từ WebView
-  function onMessage(payload) {
-    let dataPayload;
-    try {
-      dataPayload = JSON.parse(payload.nativeEvent.data);
-    } catch (e) {
-      console.log(e);
-    }
-
-    if (Number.isInteger(dataPayload)) {
-      setID(dataPayload);
-      setShowModal(true);
-    } else if (Number.isInteger(Number.parseInt(dataPayload[0]))) {
-      _delItems(dataPayload);
-    } else {
-      console.log(dataPayload);
-      _handleSaveLatLng(dataPayload);
-    }
-  }
-
-  function _handleSaveLatLng(dataPayload) {
-    navigation.navigate("MapScreen");
-    axios
-      .put("/realestate/editlatlng", {
-        editItems: dataPayload,
-      })
-      .then((response) => console.log("Edit success !!!"))
-      .catch((error) => {
-        console.error("There was an error!", error);
-      });
-  }
-
-  function _handleSaveName() {
-    navigation.navigate("MapScreen");
-    axios
-      .put("/realestate/editname", {
-        id: id,
-        name: name,
-      })
-      .then((response) => console.log("Edit success !!!"))
-      .catch((error) => {
-        console.error("There was an error!", error);
-      });
-  }
-
-  //Xử lý giao diện cho Mapscreen khi sửa
-  const _submitObjectName = () => {
-    return Alert.alert("Chắc chắn thay đổi?", "Bạn chắc chắn muốn đổi tên", [
-      // The "Yes" button
-      {
-        text: "Vâng",
-        onPress: () => {
-          _handleSaveName();
-          setName("");
-        },
-      },
-      {
-        text: "Không",
-      },
-    ]);
-  };
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("focus", () => {
+      _showMapScreen(Map_Ref);
+    });
+    return unsubscribe;
+  }, [navigation]);
 
   //Return giao diện cho Mapscreen
   let mapscreen;
@@ -182,71 +88,16 @@ const MapScreen = ({ route, navigation }) => {
               ref={Map_Ref}
               source={{ html: html_script }}
               style={styles.Webview}
-              onMessage={onMessage}
             />
             <View style={styles.Text}>
               <Text>Bạn đang ở tọa độ: {msg}</Text>
             </View>
           </SafeAreaView>
-          {/* <Button onPress={() => setShowModal(true)}>Save</Button> */}
-          <Modal isOpen={showModal} onClose={() => setShowModal(false)}>
-            <Modal.Content maxWidth="400px">
-              <Modal.CloseButton />
-              <Modal.Header>Đổi tên</Modal.Header>
-              <Modal.Body>
-                <FormControl>
-                  <FormControl.Label>Nhập tên muốn đổi:</FormControl.Label>
-                  <Input
-                    value={name}
-                    placeholder={name}
-                    onChangeText={(e) => setName(e)}
-                  />
-                  <Text color="error.500">{errMsg}</Text>
-                </FormControl>
-              </Modal.Body>
-              <Modal.Footer>
-                <Button.Group space={2}>
-                  <Button
-                    variant="ghost"
-                    colorScheme="blueGray"
-                    onPress={() => {
-                      setShowModal(false);
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onPress={() => {
-                      if (!name) {
-                        setErrMsg("Vui lòng nhập tên !!!");
-                      } else {
-                        setShowModal(false);
-                        _submitObjectName();
-                      }
-                    }}
-                  >
-                    Save
-                  </Button>
-                </Button.Group>
-              </Modal.Footer>
-            </Modal.Content>
-          </Modal>
         </NativeBaseProvider>
       </>
     );
   }
-  return (
-    <>
-      <ScrollView
-        contentContainerStyle={styles.scrollView}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-      >
-        {mapscreen}
-      </ScrollView>
-    </>
-  );
+  return <>{mapscreen}</>;
 };
 
 export default MapScreen;
